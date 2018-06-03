@@ -436,6 +436,7 @@ Scire pe chat numarul corespunzator videoclipului pe care vrei sa il asculti `)
         };
         let reason2 = args2.slice(3).join(" ");
         if(!reason2) {
+        var E23 = new Discord.RichEmbed()
         .setColor("#15f153")
         .addField("Model", "%mute <Mention Utilizator> + <Durata> + <Motiv>")
         .setTimestamp();
