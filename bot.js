@@ -12,9 +12,56 @@ const queue = new Map();
 var bot = new Discord.Client();
 var servers = {};
 
+let coins = require("./coins.json");
+let xp = require("./xp.json");
+
 bot.on("ready", function() {
     console.log("Ready");
     bot.user.setGame(`on ${bot.guilds.size} servers!`)
+});
+bot.on("message", async message => { 
+    if(!coins[message.author.id]){
+        coins[message.author.id] = {
+          coins: 0
+        };
+      }
+    
+      let coinAmt = 1;
+      let baseAmt = 1;
+    
+      if(coinAmt === baseAmt){
+        coins[message.author.id] = {
+          coins: coins[message.author.id].coins + coinAmt
+        };
+    }
+      fs.writeFile("./coins.json", JSON.stringify(coins), (err) => {
+        if (err) console.log(err)
+      });
+      console.log(message.author.username + ` + ${coinAmt}`);
+    });
+bot.on("message", async message => {
+    let xpAdd = 1;
+  console.log(xpAdd);
+
+  if(!xp[message.author.id]){
+    xp[message.author.id] = {
+      xp: 0,
+      level: 1
+    };
+  }
+
+
+  let curxp = xp[message.author.id].xp;
+  let curlvl = xp[message.author.id].level;
+  let nxtLvl = xp[message.author.id].level * 100;
+  xp[message.author.id].xp =  curxp + xpAdd;
+  if(nxtLvl <= xp[message.author.id].xp){
+    xp[message.author.id].level = curlvl + 1;
+    message.channel.send(`:up: **${message.author.username}** a ajuns level **${curlvl + 1}**`);
+  }
+  fs.writeFile("./xp.json", JSON.stringify(xp), (err) => {
+    if(err) console.log(err)
+  });
 });
 bot.on("message", async message => {
 if (message.author.bot) return undefined;
@@ -259,6 +306,9 @@ Scire pe chat numarul corespunzator videoclipului pe care vrei sa il asculti `)
             .addField("/sexy", '> Iti arata cat de sexy estic') 
             .addField("/sanse", '> Iti arata ce sanse au doua obiecte') 
             .addField("/Supreme", '> Intraba-l pe Supreme ceva') 
+            .addField("/xp", '> Iti arata xp-ul tau') 
+            .addField("/bani", '> Iti arata bani tai') 
+            .addField("/pay", '> Trimite bani unui user') 
             .addField("/avatar", '> Arata avatarul unui user') 
             .setTimestamp();
             message.channel.sendMessage(E10);
@@ -465,6 +515,74 @@ Scire pe chat numarul corespunzator videoclipului pe care vrei sa il asculti `)
     .addField('Raspunsul lui CristalVic:', r4[Math.floor(Math.random() * r4.length)])
     .setTimestamp()
     message.channel.sendMessage(E1); 
+            break;
+            case "bani" :
+            if(!coins[message.author.id]){
+                coins[message.author.id] = {
+                  coins: 0
+                };
+              }
+            
+              let uCoins = coins[message.author.id].coins;
+            
+            
+              let coinEmbed = new Discord.RichEmbed()
+              .setColor("#15f153")
+              .addField(message.author.username , uCoins + " bani" )
+              message.channel.send(coinEmbed);
+            break;
+            case "pay" :
+            if(!coins[message.author.id]){
+                return message.channel.sendMessage(`${message.author.username} NU ai desui bani`)
+              }
+            
+              let pUser = message.guild.member(message.mentions.users.first()) || message.guild.members.get(args[2]);
+            
+              if(!coins[pUser.id]){
+                coins[pUser.id] = {
+                  coins: 0
+                };
+              }
+            
+              let pCoins = coins[pUser.id].coins;
+              let sCoins = coins[message.author.id].coins;
+             if(pCoins === sCoins) return message.channel.sendMessage(`${message.author.username} NU iti poti da bani singur`)
+              if(sCoins < args[3]) return message.reply("Not enough coins there!");
+            
+              coins[message.author.id] = {
+                coins: sCoins - parseInt(args[3])
+              };
+            
+              coins[pUser.id] = {
+                coins: pCoins + parseInt(args[3])
+              };
+            
+              message.channel.send(`${message.author.username} i-a dat lui ${pUser} ${args[3]} bani`);
+              pUser.message(`Ai primit ${args[3]} bani de le ${message.author.username}`)
+            
+              fs.writeFile("./coins.json", JSON.stringify(coins), (err) => {
+                if(err) cosole.log(err)
+              });
+            break;
+            case "xp" :
+            if(!xp[message.author.id]){
+                xp[message.author.id] = {
+                  xp: 0,
+                  level: 1
+               };
+             }
+               let curxp = xp[message.author.id].xp;
+               let curlvl = xp[message.author.id].level;
+               let nxtLvlXp = curlvl * 100;
+               let difference = nxtLvlXp - curxp;
+             
+               let lvlEmbed = new Discord.RichEmbed()
+               .setAuthor(message.author.username , message.author.avatarURL)
+               .setColor("#15f153")
+               .addField("Level", curlvl, true)
+               .addField("XP", curxp, true)
+               .setFooter(`Mai ai nevoie de ${difference} XP pentru level UP`);   
+               message.channel.send(lvlEmbed);
             break;
             case "avatar" :
             let pAvatar = message.guild.member(message.mentions.users.first()) || message.guild.members.get(args[1]);
